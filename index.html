@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARDOR GAMING // NEXUS CORE ELITE // v.9.5</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@100;400;700;900&family=JetBrains+Mono:wght@100;400;700&family=Orbitron:wght@400;700;900&family=Unbounded:wght@200;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* ==========================================================================
+           1. CSS ПЕРЕМЕННЫЕ И ОСНОВНЫЕ СТИЛИ (СТРОКИ 20-150)
+           ========================================================================== */
+        :root {
+            --primary: #ff4d00; /* Фирменный оранжевый Ardor */
+            --primary-rgb: 255, 77, 0;
+            --secondary: #ff0000; /* Маленькие красные партиклы */
+            --primary-bg: #050507;
+            --card-bg: rgba(16, 16, 20, 0.9);
+            --text-main: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.4);
+            --neon-glow: 0 0 15px rgba(var(--primary-rgb), 0.4);
+            --transition-smooth: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            --font-display: 'Unbounded', sans-serif;
+            --font-body: 'Exo 2', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --font-head: 'Orbitron', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none !important; }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            overflow: hidden; /* Скролл внутри вкладок */
+            height: 100vh;
+            width: 100vw;
+            perspective: 1500px;
+        }
+
+        /* Кастомный скроллбар */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--primary-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+        /* ==========================================================================
+           2. АНИМАЦИИ (KEYFRAMES)
+           ========================================================================== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes particle-float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* ==========================================================================
+           3. КУРСОР, ПАРТИКЛЫ И ФОН
+           ========================================================================== */
+        #cursor-main {
+            position: fixed; width: 40px; height: 40px; border: 1px solid var(--primary);
+            border-radius: 50%; pointer-events: none; z-index: 10000;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #cursor-dot {
+            position: fixed; width: 6px; height: 6px; background: var(--primary);
+            border-radius: 50%; pointer-events: none; z-index: 10001;
+            box-shadow: var(--neon-glow);
+        }
+
+        /* Система фонов */
+        .bg-system {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Новый красивый фон */
+        .bg-image {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070'); /* Технологичный абстрактный фон */
+            background-size: cover; background-position: center;
+            filter: brightness(0.2) contrast(1.2) blur(2px); /* Затемнение и размытие для читаемости */
+        }
+
+        .bg-grid {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Маленькие красные партиклы */
+        #particles-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute; width: 4px; height: 4px;
+            background-color: var(--secondary);
+            opacity: 0.8;
+            border-radius: 50%;
+            animation: particle-float 10s linear infinite;
+        }
+
+        /* Шапка */
+        .header {
+            position: fixed; top: 0; width: 100%; height: 80px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 50px; background: rgba(5, 5, 7, 0.8);
+            backdrop-filter: blur(20px); border-bottom: 1px solid rgba(var(--primary-rgb), 0.1);
+            z-index: 1000;
+        }
+
+        .logo { font-family: 'Orbitron'; font-weight: 900; font-size: 24px; color: var(--primary); text-transform: uppercase; letter-spacing: 4px; }
+        .logo span { color: #fff; }
+
+        .nav-dock { display: flex; gap: 10px; background: rgba(255,255,255,0.02); padding: 5px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.05); }
+        .nav-btn {
+            padding: 12px 28px; border-radius: 40px; font-size: 11px; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 2px; transition: var(--transition-smooth);
+            color: var(--text-dim); position: relative; overflow: hidden;
+        }
+        .nav-btn:hover { color: #fff; background: rgba(var(--primary-rgb), 0.1); }
+        .nav-btn.active { color: #000; background: var(--primary); box-shadow: 0 0 25px var(--primary); }
+
+        #cart-btn {
+            cursor: pointer; border: 1px solid var(--primary); padding: 10px 25px;
+            font-family: var(--font-head); font-weight: 700; font-size: 13px;
+            transition: 0.3s;
+        }
+        #cart-btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
+
+        /* ==========================================================================
+           4. КАТАЛОГ И КАРТОЧКИ
+           ========================================================================== */
+        .viewport { padding-top: 80px; width: 100%; height: 100vh; position: relative; }
+        .catalog-container { padding: 80px 10% 100px; height: 100%; overflow-y: auto; scroll-behavior: smooth; position: relative; z-index: 2;}
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 40px; }
+
+        .card {
+            background: var(--card-bg); border-radius: 15px; padding: 40px;
+            border: 1px solid rgba(255,255,255,0.02); transition: var(--transition-smooth);
+            position: relative; overflow: hidden; animation: fadeIn 0.8s ease backwards;
+            display: flex; flex-direction: column; justify-content: space-between;
+            backdrop-filter: blur(5px);
+        }
+
+        .card:hover { transform: translateY(-15px); border-color: var(--primary); box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+
+        .card img { width: 100%; height: 250px; object-fit: contain; transition: 0.5s; filter: grayscale(1); }
+        .card:hover img { transform: scale(1.1) rotate(2deg); filter: grayscale(0); }
+
+        .card-category { font-family: var(--font-mono); color: var(--accent-secondary); font-size: 11px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        .card-title { font-family: var(--font-head); font-weight: 900; font-size: 20px; margin-bottom: 15px; }
+
+        .price-box { font-size: 32px; font-weight: 900; color: var(--primary); margin: 20px 0; font-family: var(--font-head); }
+
+        /* ==========================================================================
+           5. МОДАЛЬНОЕ ОКНО ИНФО
+           ========================================================================== */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 2000; display: none;
+            justify-content: center; align-items: center; padding: 50px;
+            backdrop-filter: blur(10px);
+        }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.5s forwards; }
+
+        .modal-content {
+            background: #111115; width: 100%; max-width: 1200px; max-height: 90vh;
+            border-radius: 20px; border: 1px solid var(--primary); overflow-y: auto;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 60px; padding: 60px;
+            position: relative; box-shadow: 0 0 50px rgba(var(--primary-rgb), 0.2);
+            z-index: 2001;
+        }
+
+        .close-modal { position: absolute; top: 30px; right: 30px; font-size: 20px; color: var(--primary); cursor: pointer; font-family: var(--font-head); }
+
+        .spec-list { list-style: none; margin-top: 30px; }
+        .spec-item { padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 13px; }
+        .spec-label { color: var(--text-dim); }
+
+        /* ==========================================================================
+           6. КНОПКИ И УВЕДОМЛЕНИЯ
+           ========================================================================== */
+        .btn-ui { padding: 15px 30px; font-weight: 900; width: 100%; margin-top: 20px; text-transform: uppercase; font-family: var(--font-head); font-size: 13px; letter-spacing: 2px; transition: 0.3s; }
+        .btn-action { background: var(--primary); color: #000; border: none; }
+        .btn-action:hover { background: #fff; box-shadow: 0 0 20px var(--primary); }
+
+        #notification {
+            position: fixed; bottom: 30px; right: 30px; background: var(--primary);
+            color: #000; padding: 20px 40px; font-weight: 900; z-index: 3000;
+            border-radius: 5px; transform: translateY(200%); transition: 0.4s;
+            font-family: var(--font-head); font-size: 12px; letter-spacing: 2px;
+        }
+        #notification.active { transform: translateY(0); }
+
+        footer { position: fixed; bottom: 0; width: 100%; padding: 10px; text-align: center; opacity: 0.3; font-size: 10px; font-family: var(--font-mono); color: var(--text-dim); z-index: 1; }
+
+    </style>
+</head>
+<body>
+
+    <div id="cursor-main"></div>
+    <div id="cursor-dot"></div>
+    
+    <div class="bg-system">
+        <div class="bg-image"></div>
+        <div class="bg-grid"></div>
+        <div id="particles-container"></div>
+    </div>
+
+    <div id="notification">СИСТЕМА_ОБНОВЛЕНА_//_ITEM_ADDED</div>
+
+    <header class="header">
+        <div class="logo">ARDOR //<span> GAMING</span></div>
+        <nav class="nav-dock">
+            <div class="nav-btn active" onclick="switchView('home', this)">ВЕСЬ_АРСЕНАЛ</div>
+            <div class="nav-btn" onclick="switchView('mouse', this)">МЫШИ</div>
+            <div class="nav-btn" onclick="switchView('keyboard', this)">КЛАВИАТУРЫ</div>
+        </nav>
+        <div id="cart-btn">
+            ТЕРМИНАЛ_КОРЗИНЫ: <span id="cart-count">0</span>
+        </div>
+    </header>
+
+    <main class="viewport">
+        
+        <section id="home" class="catalog-container window active">
+            <div class="grid" id="product-grid">
+                </div>
+        </section>
+
+    </main>
+
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">ЗАКРЫТЬ [ESC]</span>
+            <div id="modal-img-container">
+                </div>
+            <div id="modal-info-container">
+                </div>
+        </div>
+    </div>
+
+    <footer>
+        GMNI_CORE // NEURAL_NEXUS // 2026 // v.9.5
+    </footer>
+
+    <script>
+        /* ==========================================================================
+           7. ЛОГИКА И ДАННЫЕ (СТРОКИ 1100+)
+           ========================================================================== */
+
+        // Обновленная база данных с реальными изображениями Ardor Gaming
+        const PRODUCTS = [
+            {
+                id: 1,
+                category: 'mouse',
+                name: 'Phantom Pro',
+                price: 4990,
+                img: 'https://items.s1.citilink.ru/1865910_v01_b.jpg', // Фото Phantom Pro
+                description: 'Флагманская беспроводная мышь с сенсором PixArt PAW3395. Идеальный баланс веса и скорости.',
+                specs: {
+                    'Сенсор': 'PixArt PAW3395',
+                    'DPI': '26 000',
+                    'Переключатели': 'Kailh GM 8.0',
+                    'Вес': '62 грамма',
+                    'Подключение': '2.4GHz / Bluetooth / Type-C'
+                },
+                features: ['Сверхлегкий корпус', 'Тефлоновые ножки 100% PTFE', 'До 80 часов работы']
+            },
+            {
+                id: 2,
+                category: 'keyboard',
+                name: 'Patron RGB',
+                price: 8500,
+                img: 'https://items.s1.citilink.ru/1545414_v01_b.jpg', // Фото Patron RGB
+                description: 'Механическая клавиатура премиум-класса на смазанных переключателях Gateron Yellow.',
+                specs: {
+                    'Переключатели': 'Gateron Yellow (Смазанные)',
+                    'Форм-фактор': '75%',
+                    'Кейкапы': 'PBT Double-shot',
+                    'Hot-Swap': 'Есть (3/5 pin)',
+                    'Подсветка': 'RGB 16.8 млн цветов'
+                },
+                features: ['Шумоизоляция корпуса', 'Съемный кабель', 'Металлическая пластина']
+            },
+            {
+                id: 3,
+                category: 'monitor',
+                name: 'Portal 144Hz',
+                price: 19200,
+                img: 'https://items.s1.citilink.ru/1892186_v01_b.jpg', // Фото Portal
+                description: 'Игровой монитор с IPS матрицей и молниеносным откликом для киберспорта.',
+                specs: {
+                    'Матрица': 'Fast IPS',
+                    'Частота': '144 Гц',
+                    'Отклик': '1 мс (GtG)',
+                    'Разрешение': '1920x1080 (FullHD)',
+                    'Яркость': '350 кд/м²'
+                },
+                features: ['HDR10 поддержка', 'Технология FreeSync', 'Тонкие рамки']
+            }
+        ];
+
+        let cart = [];
+
+        // Инициализация сетки
+        function initGrid(data = PRODUCTS) {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = data.map(p => `
+                <div class="card" onclick="openDetails(${p.id})">
+                    <img src="${p.img}" alt="${p.name}">
+                    <div style="margin-top:20px;">
+                        <span class="card-category">${p.category}</span>
+                        <h3 class="card-title">${p.name}</h3>
+                    </div>
+                    <p style="color:var(--text-dim); font-size:12px;">Кликните для деталей</p>
+                    <div class="price-box">${p.price.toLocaleString()} ₽</div>
+                    <button class="btn-ui btn-action" onclick="event.stopPropagation(); addToCart(${p.id})">ADD_TO_CORE</button>
+                </div>
+            `).join('');
+        }
+
+        // Открытие полной информации
+        function openDetails(id) {
+            const p = PRODUCTS.find(x => x.id === id);
+            const modal = document.getElementById('detail-modal');
+            const imgCont = document.getElementById('modal-img-container');
+            const infoCont = document.getElementById('modal-info-container');
+
+            imgCont.innerHTML = `<img src="${p.img}" style="width:100%; height:auto; border-radius:10px; filter:grayscale(0); border:1px solid rgba(255,77,0,0.2)">`;
+            
+            infoCont.innerHTML = `
+                <span class="card-category">${p.category}</span>
+                <h2 style="font-size:40px; font-family:'Orbitron'; color:var(--primary); font-weight:900;">${p.name}</h2>
+                <p style="margin:20px 0; font-size:18px;">${p.description}</p>
+                <div class="spec-list">
+                    ${Object.entries(p.specs).map(([k, v]) => `
+                        <div class="spec-item">
+                            <span class="spec-label">${k}</span>
+                            <span class="spec-val">${v}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="margin-top:30px;">
+                    <h3 style="font-family:'Orbitron';">ОСОБЕННОСТИ:</h3>
+                    <ul style="padding-left:20px; color:var(--primary); font-size:14px;">
+                        ${p.features.map(f => `<li>${f}</li>`).join('')}
+                    </div>
+                </div>
+                <div class="price-box" style="font-size:45px;">${p.price.toLocaleString()} ₽</div>
+                <button class="btn-ui btn-action" onclick="addToCart(${p.id})">ДОБАВИТЬ_В_СТЭК_//_BUY</button>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.remove('active');
+        }
+
+        // Логика корзины и уведомлений
+        function addToCart(id) {
+            cart.push(id);
+            document.getElementById('cart-count').innerText = cart.length;
+            
+            const note = document.getElementById('notification');
+            note.classList.add('active');
+            setTimeout(() => note.classList.remove('active'), 2000);
+        }
+
+        // Вкладки
+        function switchView(cat, btn) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if(cat === 'home') initGrid(PRODUCTS);
+            else initGrid(PRODUCTS.filter(p => p.category === cat));
+        }
+
+        // Курсор
+        const cMain = document.getElementById('cursor-main');
+        const cDot = document.getElementById('cursor-dot');
+
+        document.addEventListener('mousemove', (e) => {
+            cDot.style.left = e.clientX + 'px';
+            cDot.style.top = e.clientY + 'px';
+            
+            cMain.animate({
+                left: e.clientX - 20 + 'px',
+                top: e.clientY - 20 + 'px'
+            }, { duration: 500, fill: 'forwards' });
+        });
+
+        // ПАРТИКЛЫ
+        function createParticles() {
+            const container = document.getElementById('particles-container');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + 'vw';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Закрытие модалки по Escape
+        window.addEventListener('keydown', (e) => {
+            if(e.key === 'Escape') closeModal();
+        });
+
+        // INIT
+        initGrid();
+        createParticles();
+    </script>
+</body>
+</html>
